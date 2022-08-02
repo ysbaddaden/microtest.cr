@@ -8,6 +8,7 @@ require "./test"
 module Microtest
   @@count = 0
   @@failures = 0
+  @@skips = 0
   @@total_duration = 0.0
   @@options = Options.new
 
@@ -23,6 +24,10 @@ module Microtest
     @@failures
   end
 
+  def self.skips
+    @@skips
+  end
+
   def self.total_duration
     @@total_duration
   end
@@ -33,6 +38,14 @@ module Microtest
 
   def self.failed?
     @@failures > 0
+  end
+
+  def self.status
+    if failed?
+      Status::FAILURE
+    else
+      Status::SUCCESS
+    end
   end
 
   def self.run : Bool
@@ -46,10 +59,10 @@ module Microtest
       LibC.dprintf(2, "\n\n")
     end
 
-    color, reset = colors(failed?)
+    color, reset = colors(status)
 
     LibC.dprintf(2, "Finished in %s\n", humanize(total_duration))
-    LibC.dprintf(2, "%s%d runs, %d failures%s\n", color, count, failures, reset)
+    LibC.dprintf(2, "%s%d runs, %d failures, %d skips%s\n", color, count, failures, skips, reset)
 
     !failed?
   end
@@ -69,15 +82,21 @@ module Microtest
   end
 
   protected def self.report(result : Result) : Nil
-    if result.failed?
+    case result.status
+    when Status::FAILURE
       @@failures &+= 1
       char = "F"
-    else
+    when Status::SKIP
+      @@skips &+= 1
+      char = "S"
+    when Status::SUCCESS
       char = "."
+    else
+      unreachable
     end
 
     @@total_duration += result.duration
-    color, reset = colors(result.failed?)
+    color, reset = colors(result.status)
 
     if @@options.verbose?
       LibC.dprintf(2, "%s#%s (%s) = %s%s%s\n", result.suite_name, result.method_name, humanize(result.duration), color, char, reset)
@@ -86,9 +105,16 @@ module Microtest
     end
   end
 
-  private def self.colors(failed)
+  private def self.colors(status)
     if @@options.colorful?
-      {failed ? "\e[31" : "\e[32m", "\e[0m"}
+      color =
+        case status
+        when Status::SUCCESS then "\e[32m"
+        when Status::FAILURE then "\e[31m"
+        when Status::SKIP    then "\e[33m"
+        else unreachable
+        end
+      {color, "\e[0m"}
     else
       {"", ""}
     end

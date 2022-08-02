@@ -1,7 +1,21 @@
 module Microtest
+  enum Status
+    SKIP
+    FAILURE
+    SUCCESS
+
+    def ==(other : Status)
+      value == other.value
+    end
+
+    def ===(other : Status)
+      value == other.value
+    end
+  end
+
   struct Result
     def initialize(@suite_name : String, @method_name : String)
-      @failed = false
+      @status = Status::SUCCESS
       @duration = 0.0
     end
 
@@ -21,12 +35,28 @@ module Microtest
       @duration = value
     end
 
-    def failed! : Nil
-      @failed = true
+    def status : Status
+      @status
+    end
+
+    def status=(status : Status)
+      @status = status
+    end
+
+    def status=(status : Nil)
+      @status = Status::SUCCESS
     end
 
     def failed? : Bool
-      @failed == true
+      @status == Status::FAILURE
+    end
+
+    def skipped? : Bool
+      @status == Status::SKIP
+    end
+
+    def success? : Bool
+      @status == Status::SUCCESS
     end
   end
 end

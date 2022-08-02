@@ -11,11 +11,7 @@ abstract struct Microtest::Test
 
         result.duration = Microtest.measure do
           %test.setup
-
-          if %test.{{method.name}} == false
-            result.failed!
-          end
-
+          result.status = %test.{{method.name}}
           %test.teardown
         end
 
@@ -30,23 +26,23 @@ abstract struct Microtest::Test
   def teardown : Nil
   end
 
+  macro skip
+    return Microtest::Status::SKIP
+  end
+
   macro assert(expression, file = __FILE__, line = __LINE__)
-    if !!({{expression}}) == true
-      return true
-    else
+    unless !!({{expression}}) == true
       LibC.dprintf(2, "Expected {{expression}} to be truthy\n")
       LibC.dprintf(2, "  at %s:%d\n", {{file}}, {{line}})
-      return false
+      return Microtest::Status::FAILURE
     end
   end
 
   macro refute(expression, file = __FILE__, line = __LINE__)
-    if !!({{expression}}) == false
-      return true
-    else
+    unless !!({{expression}}) == false
       LibC.dprintf(2, "\nExpected {{expression}} to be falsy\n")
       LibC.dprintf(2, "  at %s:%d\n", {{file}}, {{line}})
-      return false
+      return Microtest::Status::FAILURE
     end
   end
 end
