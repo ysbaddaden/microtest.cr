@@ -48,12 +48,17 @@ def errno : Int32
   {% end %}
 end
 
+def unreachable : NoReturn
+  panic "BUG: unreachable has been reached (oops)"
+end
+
 def abort(message) : NoReturn
   LibC.dprintf(2, message)
+  LibC.dprintf(2, "\n")
   LibC.exit(1)
 end
 
 def panic(function_name, errnum = errno) : NoReturn
-  LibC.dprintf(2, "ERROR: %s failed with %s", function_name, LibC.strerror(errnum))
+  LibC.dprintf(2, "ERROR: %s failed with %s\n", function_name, LibC.strerror(errnum))
   LibC.exit(1)
 end
