@@ -3,14 +3,6 @@ module Microtest
     SKIP
     FAILURE
     SUCCESS
-
-    def ==(other : Status)
-      value == other.value
-    end
-
-    def ===(other : Status)
-      value == other.value
-    end
   end
 
   struct Result
@@ -43,7 +35,7 @@ module Microtest
       @status = status
     end
 
-    def status=(status : Nil)
+    def status=(_status)
       @status = Status::SUCCESS
     end
 

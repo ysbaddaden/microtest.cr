@@ -4,6 +4,10 @@ version: 0.1.0
 authors:
   - Julien Portalier <julien@portalier.com>
 
-crystal: '>= 1.0.0'
+crystal: ">= 1.0.0"
+
+dependencies:
+  nano:
+    github: ysbaddaden/nanolib.cr
 
 license: MIT

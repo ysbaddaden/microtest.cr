@@ -1,7 +1,7 @@
 require "c/stdlib"
 require "c/sys/time"
 require "c/time"
-require "./corelib"
+require "nano"
 require "./options"
 require "./test"
 
@@ -75,8 +75,8 @@ module Microtest
   end
 
   private def self.clock_gettime(clock : LibC::ClockidT) : {Int64, Int32}
-    if LibC.clock_gettime(clock, out tp) == 1
-      panic "clock_gettime"
+    unless LibC.clock_gettime(clock, out tp) == 0
+      errno! "clock_gettime"
     end
     {tp.tv_sec.to_i64!, tp.tv_nsec.to_i32!}
   end
@@ -92,7 +92,7 @@ module Microtest
     when Status::SUCCESS
       char = "."
     else
-      unreachable
+      unreachable!
     end
 
     @@total_duration += result.duration
@@ -112,7 +112,7 @@ module Microtest
         when Status::SUCCESS then "\e[32m"
         when Status::FAILURE then "\e[31m"
         when Status::SKIP    then "\e[33m"
-        else unreachable
+        else unreachable!
         end
       {color, "\e[0m"}
     else
